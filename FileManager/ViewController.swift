@@ -6,25 +6,23 @@
 //
 
 import UIKit
+import Photos
+import PhotosUI
 
 class ViewController: UIViewController {
 
-    private lazy var layout = UICollectionViewFlowLayout()
-    private lazy var collectionView = UICollectionView(frame: .zero,
-                                                       collectionViewLayout: self.layout
-    )
+    private lazy var tableView = UITableView(frame: .zero, style: .grouped)
     private lazy var collectionOfFiles: [URL] = []
-    private lazy var baseURL: URL? = nil
     private let manager = FileManager.default
+    private lazy var number = 0
 
 
 
     override func viewDidLoad() {
         super.viewDidLoad()
         setupSettingsView()
-        loadData()
-        setupLoyoutCollectionView()
-        setupCollectionView()
+        reloadData()
+        setupTableView()
     }
 
     private func setupSettingsView() {
@@ -38,7 +36,7 @@ class ViewController: UIViewController {
         self.navigationItem.rightBarButtonItem = addButton
     }
 
-    private func loadData(){
+    private func reloadData(){
         do {
 
             let documentsUrl = try self.manager.url(for: .documentDirectory,
@@ -46,78 +44,78 @@ class ViewController: UIViewController {
                                                     appropriateFor: nil,
                                                     create: false
             )
-            baseURL = documentsUrl
-
             let files = try self.manager.contentsOfDirectory(at: documentsUrl,
                                                              includingPropertiesForKeys: nil,
                                                              options: [.skipsHiddenFiles]
             )
-            collectionOfFiles = files
-            //            for file in files {
-            ////                let filePath = documentsUrl.appending(path: file)
-            ////                        print("🍋 File path: \(filePath)")
-            //
-            //                print("🍋", manager.contents(atPath: file.path))//, file.path, "OR ", file)
-            //                }
+            self.collectionOfFiles = files
+        } catch let error {
+            print(error)
+        }
+    }
+
+    private func setupTableView() {
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 44
+        tableView.dataSource = self
+        tableView.delegate = self
+        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "DefaultCellID")
+        tableView.register(TableViewCell.self, forCellReuseIdentifier: "tabelViewCellID")
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+
+        self.view.addSubview(tableView)
+
+        NSLayoutConstraint.activate([
+            self.tableView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
+            self.tableView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
+            self.tableView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
+            self.tableView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
+        ])
+    }
+
+    @objc private func addPhoto() {
+        var config = PHPickerConfiguration(photoLibrary: .shared())
+        config.selectionLimit = 1
+        config.filter = .images
+        let vc = PHPickerViewController(configuration: config)
+        vc.delegate = self
+        present(vc, animated: true)
+    }
+
+    private func addImage(image: UIImage) {
+        do {
+            let documentsUrl = try self.manager.url(for: .documentDirectory,
+                                                    in: .userDomainMask,
+                                                    appropriateFor: nil,
+                                                    create: false
+            )
+            var imageUrl = documentsUrl.appendingPathComponent("Image_0.jpg")
+            repeat {
+                let name = "Image_" + String(self.number) + ".jpg"
+                imageUrl = documentsUrl.appendingPathComponent(name)
+                self.number += 1
+            } while self.manager.fileExists(atPath: imageUrl.path)
+
+            let data = image.jpegData(compressionQuality: 1.0)
+            self.manager.createFile(atPath: imageUrl.path, contents: data)
+            self.reloadData()
+            self.tableView.reloadData()
         } catch let error {
             print(error)
         }
 
     }
-
-    private func setupLoyoutCollectionView() {
-        layout.scrollDirection = .vertical
-        layout.minimumInteritemSpacing = 8
-    }
-
-    private func setupCollectionView() {
-        //        collectionView.backgroundColor = .systemGroupedBackground
-        collectionView.dataSource = self
-        collectionView.delegate = self
-        collectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "DefaultCellID")
-        collectionView.register(CollectionViewCell.self, forCellWithReuseIdentifier: "CollectionViewCellID")
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        //        collectionView.showsVerticalScrollIndicator = false
-
-        self.view.addSubview(collectionView)
-
-        NSLayoutConstraint.activate([
-            self.collectionView.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor),
-            self.collectionView.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor, constant: 8),
-            self.collectionView.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -8),
-            self.collectionView.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor),
-        ])
-    }
-
-    //    private func openPicker() {
-    //        let picker = UIPickerView()
-    ////        picker.didFinishPicking { [unowned picker] items, _ in
-    ////            if let photo = items.singlePhoto {
-    ////                print(photo.fromCamera) // Image source (camera or library)
-    ////                print(photo.image) // Final image selected by the user
-    ////                print(photo.originalImage) // original image selected by the user, unfiltered
-    ////                print(photo.modifiedImage) // Transformed image, can be nil
-    ////                print(photo.exifMeta) // Print exif meta data of original image.
-    ////            }
-    ////            picker.dismiss(animated: true, completion: nil)
-    ////        }
-    //        present(picker, animated: true, completion: nil)
-    //    }
-
-    @objc private func addPhoto() {
-
-    }
 }
 
-extension ViewController: UICollectionViewDataSource {
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
+extension ViewController: UITableViewDataSource {
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         collectionOfFiles.count
     }
 
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let defultCell = collectionView.dequeueReusableCell(withReuseIdentifier: "DefaultCellID", for: indexPath)
-        for (index, file) in collectionOfFiles.enumerated() where indexPath.item == index {
-            guard let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewCellID", for: indexPath) as? CollectionViewCell else {
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let defultCell = tableView.dequeueReusableCell(withIdentifier: "DefaultCellID", for: indexPath)
+        for (index, file) in collectionOfFiles.enumerated() where indexPath[1] == index {
+            guard let cell = tableView.dequeueReusableCell(withIdentifier: "tabelViewCellID", for: indexPath) as? TableViewCell else {
                 return defultCell
             }
             guard let data = self.manager.contents(atPath: file.path) else {
@@ -131,21 +129,48 @@ extension ViewController: UICollectionViewDataSource {
         }
         return defultCell
     }
-
-
 }
 
-extension ViewController: UICollectionViewDelegate {
+extension ViewController: UITableViewDelegate {
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
 
-}
+        let urlPath = collectionOfFiles[indexPath.row]
 
-extension ViewController: UICollectionViewDelegateFlowLayout {
-    func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        if  self.view.frame.width < self.view.frame.height {
-            return CGSize(width: collectionView.frame.width, height: collectionView.frame.width)
-        } else {
-            return CGSize(width: self.view.frame.height, height: self.view.frame.height)
+        let deleteAction = UIContextualAction(style: .destructive, title: "Delete") { _, _, complete in
+            do {
+                try self.manager.removeItem(atPath: urlPath.path)
+                self.reloadData()
+                tableView.deleteRows(at: [indexPath], with: .automatic)
+            } catch let error {
+                print(error)
+            }
+            complete(true)
         }
+        let configuration = UISwipeActionsConfiguration(actions: [deleteAction])
+               configuration.performsFirstActionWithFullSwipe = true
+               return configuration
+    }
+}
+
+extension ViewController: PHPickerViewControllerDelegate {
+    func picker(_ picker: PHPickerViewController, didFinishPicking results: [PHPickerResult]) {
+
+        for (_, result) in results.enumerated() {
+            result.itemProvider.loadObject(ofClass: UIImage.self) { [weak self] file, error in
+                guard error == nil else {
+                    return
+
+                }
+                guard let image = file as? UIImage, error == nil else {
+                    return
+
+                }
+                DispatchQueue.main.sync {
+                    self?.addImage(image: image)
+                }
+            }
+        }
+        picker.dismiss(animated: true)
     }
 }
 

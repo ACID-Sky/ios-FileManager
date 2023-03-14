@@ -7,17 +7,22 @@
 
 import UIKit
 
-class CollectionViewCell: UICollectionViewCell {
+class TableViewCell: UITableViewCell {
 
     let image = UIImageView()
 
-    override init(frame: CGRect) {
-        super.init(frame: frame)
+    override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
+        super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.setupContentView()
     }
 
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
+    }
+    override func prepareForReuse() {
+        super.prepareForReuse()
+        self.image.image = nil
+        self.urlImage = nil
     }
 
     private func setupContentView() {
@@ -27,7 +32,8 @@ class CollectionViewCell: UICollectionViewCell {
 
     private func setupImage() {
         image.translatesAutoresizingMaskIntoConstraints = false
-        image.contentMode = .scaleAspectFill
+        image.contentMode = .scaleToFill
+        image.clipsToBounds = true
 
         self.contentView.addSubview(image)
 
@@ -35,7 +41,8 @@ class CollectionViewCell: UICollectionViewCell {
             self.image.topAnchor.constraint(equalTo: self.contentView.topAnchor),
             self.image.leadingAnchor.constraint(equalTo: self.contentView.leadingAnchor),
             self.image.trailingAnchor.constraint(equalTo: self.contentView.trailingAnchor),
-            self.image.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor),
+            self.image.heightAnchor.constraint(equalToConstant: (self.contentView.frame.size.width * 9 / 16)),
+            self.image.bottomAnchor.constraint(equalTo: self.contentView.bottomAnchor)
         ])
     }
 

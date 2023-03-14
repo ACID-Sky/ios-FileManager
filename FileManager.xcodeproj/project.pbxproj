@@ -12,7 +12,7 @@
 		76041BE629BF106E00722716 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76041BE529BF106E00722716 /* ViewController.swift */; };
 		76041BEB29BF107000722716 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 76041BEA29BF107000722716 /* Assets.xcassets */; };
 		76041BEE29BF107000722716 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 76041BEC29BF107000722716 /* LaunchScreen.storyboard */; };
-		76041BF629BF274400722716 /* CollectionViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76041BF529BF274400722716 /* CollectionViewCell.swift */; };
+		76041BF629BF274400722716 /* TableViewCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 76041BF529BF274400722716 /* TableViewCell.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -23,7 +23,7 @@
 		76041BEA29BF107000722716 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		76041BED29BF107000722716 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		76041BEF29BF107000722716 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		76041BF529BF274400722716 /* CollectionViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CollectionViewCell.swift; sourceTree = "<group>"; };
+		76041BF529BF274400722716 /* TableViewCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TableViewCell.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -59,7 +59,7 @@
 				76041BE129BF106E00722716 /* AppDelegate.swift */,
 				76041BE329BF106E00722716 /* SceneDelegate.swift */,
 				76041BE529BF106E00722716 /* ViewController.swift */,
-				76041BF529BF274400722716 /* CollectionViewCell.swift */,
+				76041BF529BF274400722716 /* TableViewCell.swift */,
 				76041BEA29BF107000722716 /* Assets.xcassets */,
 				76041BEC29BF107000722716 /* LaunchScreen.storyboard */,
 				76041BEF29BF107000722716 /* Info.plist */,
@@ -139,7 +139,7 @@
 			files = (
 				76041BE629BF106E00722716 /* ViewController.swift in Sources */,
 				76041BE229BF106E00722716 /* AppDelegate.swift in Sources */,
-				76041BF629BF274400722716 /* CollectionViewCell.swift in Sources */,
+				76041BF629BF274400722716 /* TableViewCell.swift in Sources */,
 				76041BE429BF106E00722716 /* SceneDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -208,7 +208,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
@@ -262,7 +262,7 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.2;
+				IPHONEOS_DEPLOYMENT_TARGET = 13.0;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				SDKROOT = iphoneos;
