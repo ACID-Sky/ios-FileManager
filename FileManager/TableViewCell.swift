@@ -22,7 +22,6 @@ class TableViewCell: UITableViewCell {
     override func prepareForReuse() {
         super.prepareForReuse()
         self.image.image = nil
-        self.urlImage = nil
     }
 
     private func setupContentView() {
