@@ -13,6 +13,7 @@ class InfoViewController: UIViewController {
     private lazy var label = UILabel()
     private lazy var switcher = UISwitch()
     private lazy var checkBox = UIButton()
+    private lazy var changePasswordButton = UIButton()
 
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -23,6 +24,7 @@ class InfoViewController: UIViewController {
         self.setupLabel()
         self.setupSwitcher()
         self.setupCheckBox()
+        self.setupChangePasswordButton()
 
         // Do any additional setup after loading the view.
     }
@@ -104,6 +106,24 @@ class InfoViewController: UIViewController {
         ])
     }
 
+    private func setupChangePasswordButton() {
+        self.changePasswordButton.translatesAutoresizingMaskIntoConstraints = false
+        self.changePasswordButton.setTitle("Сменить пароль", for: .normal)
+        self.changePasswordButton.backgroundColor = .purple
+        self.changePasswordButton.layer.cornerRadius = 10
+        self.changePasswordButton.layer.borderWidth = 0.5
+        self.changePasswordButton.layer.borderColor = UIColor.lightGray.cgColor
+        self.changePasswordButton.addTarget(self, action:  #selector(buttonPresed), for: .touchUpInside)
+
+        self.view.addSubview(changePasswordButton)
+
+        NSLayoutConstraint.activate([
+            self.changePasswordButton.topAnchor.constraint(equalTo: self.checkBox.bottomAnchor, constant: 8),
+            self.changePasswordButton.leadingAnchor.constraint(equalTo: self.view.leadingAnchor, constant: 8),
+            self.changePasswordButton.trailingAnchor.constraint(equalTo: self.view.trailingAnchor, constant: -8),
+        ])
+    }
+
     @objc private func changeSettings() {
         if self.switcher.isOn == true {
             self.checkBox.setTitleColor(.purple, for: .normal)
@@ -119,6 +139,13 @@ class InfoViewController: UIViewController {
         }
         self.userDefaults.setValue(self.switcher.isOn, forKey: KeysForUserDefaults.sortIsOn)
         self.userDefaults.setValue(self.checkBox.titleLabel?.text, forKey: KeysForUserDefaults.TypeOfSort)
+    }
+
+    @objc private func buttonPresed() {
+        let vc = LoginViewController()
+        vc.changePass = true
+        let viewController = UINavigationController(rootViewController: vc)
+        present(viewController, animated: true)
     }
 
 }

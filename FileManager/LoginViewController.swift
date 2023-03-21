@@ -11,6 +11,7 @@ import Locksmith
 class LoginViewController: UIViewController {
 
     private lazy var password = ""
+    lazy var changePass: Bool = false
 
     private lazy var scrollView = UIScrollView()
     private lazy var logoView = UIImageView()
@@ -38,7 +39,9 @@ class LoginViewController: UIViewController {
 //        userDefaults.removeObject(forKey: KeysForUserDefaults.TypeOfSort)
 //        userDefaults.removeObject(forKey: KeysForUserDefaults.sortIsOn)
 //        print("Удалили")
+//        openView()
         self.loadPass()
+        print("🔐", password)
     }
 
     override func viewDidLayoutSubviews() {
@@ -233,28 +236,40 @@ class LoginViewController: UIViewController {
     @objc private func buttonTapped () {
         switch self.loginButton.titleLabel?.text {
         case Resources.singIn:
-            guard self.password == passwordTextField.text, self.password.count > 0 else {
-                passwordTextField.text = nil
-                let alert = Alerts().showAlert(name: AlertsMessage.wrongOriginPass)
-                self.present(alert, animated: true, completion: nil)
-                return
-              }
-            openView()
+            if changePass {
+                guard let password = self.passwordTextField.text, password.count >= 4 else {
+                    self.passwordTextField.text = nil
+                    let alert = Alerts().showAlert(name: AlertsMessage.wrongOriginPass)
+                    self.present(alert, animated: true, completion: nil)
+                    return
+                }
+                self.password = password
+                self.passwordTextField.text = nil
+                self.loginButton.setTitle(Resources.change, for: .normal)
+            } else {
+                guard self.password == self.passwordTextField.text, self.password.count > 0 else {
+                    self.passwordTextField.text = nil
+                    let alert = Alerts().showAlert(name: AlertsMessage.wrongOriginPass)
+                    self.present(alert, animated: true, completion: nil)
+                    return
+                }
+                openView()
+            }
 
         case Resources.create:
-            guard let password = passwordTextField.text, password.count >= 4 else {
-                passwordTextField.text = nil
+            guard let password = self.passwordTextField.text, password.count >= 4 else {
+                self.passwordTextField.text = nil
                 let alert = Alerts().showAlert(name: AlertsMessage.fewCharacters)
                 self.present(alert, animated: true, completion: nil)
                 return
               }
             self.password = password
-            passwordTextField.text = nil
+            self.passwordTextField.text = nil
             self.loginButton.setTitle(Resources.repeatPass, for: .normal)
 
         case Resources.repeatPass:
-            guard self.password == passwordTextField.text else {
-                passwordTextField.text = nil
+            guard self.password == self.passwordTextField.text else {
+                self.passwordTextField.text = nil
                 self.password = ""
                 self.loginButton.setTitle(Resources.create, for: .normal)
                 let alert = Alerts().showAlert(name: AlertsMessage.wrongNewPass)
@@ -265,10 +280,32 @@ class LoginViewController: UIViewController {
             do {
                 try Locksmith.saveData(data: [Resources.key:self.password], forUserAccount: Resources.service)
 
-                passwordTextField.text = nil
+                self.passwordTextField.text = nil
                 self.loginButton.setTitle(Resources.singIn, for: .normal)
 
                 openView()
+
+            }catch let error {
+                print(error)
+            }
+
+        case Resources.change:
+            guard self.password == self.passwordTextField.text else {
+                self.passwordTextField.text = nil
+                self.password = ""
+                self.loginButton.setTitle(Resources.singIn, for: .normal)
+                let alert = Alerts().showAlert(name: AlertsMessage.wrongNewPass)
+                self.present(alert, animated: true, completion: nil)
+                return
+              }
+            do {
+                try Locksmith.updateData(data: [Resources.key:self.password], forUserAccount: Resources.service)
+
+                self.passwordTextField.text = nil
+                self.loginButton.setTitle(Resources.singIn, for: .normal)
+                print("🔐", self.password)
+
+                dismiss(animated: true)
 
             }catch let error {
                 print(error)
