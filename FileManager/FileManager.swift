@@ -36,7 +36,11 @@ final class MyFileManager {
     }
 
     func getData(fileUrl: String) -> [String: Any] {
-        var fileData = ["image":UIImage(systemName: "photo.fill")!,"name":"Unknow data","creationDateAndTime":"Unknow data","size":"Unknow data"] as! [String : Any]
+        var fileData = ["image":UIImage(systemName: "photo.fill")!,
+                        "name":"Unknow data",
+                        "creationDateAndTime":"Unknow data",
+                        "size":"Unknow data"
+        ] as! [String : Any]
         guard let data = self.manager.contents(atPath: fileUrl) else {
             return fileData
         }

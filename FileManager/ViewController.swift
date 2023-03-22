@@ -11,6 +11,7 @@ import PhotosUI
 
 class ViewController: UIViewController {
 
+    private let userDefaults = UserDefaults.standard
     private lazy var tableView = UITableView(frame: .zero, style: .grouped)
     private lazy var filemanagerService = MyFileManager()
 
@@ -18,6 +19,12 @@ class ViewController: UIViewController {
         super.viewDidLoad()
         setupSettingsView()
         setupTableView()
+        NotificationCenter.default.addObserver(forName: UserDefaults.didChangeNotification,
+                                               object: nil,
+                                               queue: nil
+        ) { _ in
+            self.tableView.reloadData()
+        }
     }
 
     private func setupSettingsView() {
@@ -29,6 +36,8 @@ class ViewController: UIViewController {
 
         let addButton = UIBarButtonItem(barButtonSystemItem: .add, target: self, action: #selector(addPhoto))
         self.navigationItem.rightBarButtonItem = addButton
+//        let logOutButton = UIBarButtonItem(barButtonSystemItem: .cancel, target: self, action: #selector(logOut))
+//        self.navigationItem.leftBarButtonItem = logOutButton
     }
 
     private func setupTableView() {
@@ -59,9 +68,44 @@ class ViewController: UIViewController {
         present(vc, animated: true)
     }
 
+//    @objc private func logOut() {
+//        print("logout")
+//    }
+
     private func addImage(image: UIImage) {
         self.filemanagerService.addImage(image: image)
         self.tableView.reloadData()
+    }
+
+    private func sortArray(array: [URL]) -> [URL] {
+        var newArray: [URL] = []
+
+        if (self.userDefaults.bool(forKey: KeysForUserDefaults.didChange) &&
+            self.userDefaults.bool(forKey: KeysForUserDefaults.sortIsOn)) ||
+            self.userDefaults.bool(forKey: KeysForUserDefaults.didChange) == false {
+
+            var stringArray: [String] = []
+            for (_, fileUrl) in array.enumerated() {
+                let stringUrl = fileUrl.absoluteString
+                stringArray.append(stringUrl)
+            }
+            var sortStringArray: [String] = []
+
+            if self.userDefaults.string(forKey: KeysForUserDefaults.TypeOfSort) == TypeForSortFile.fromAToZ ||
+                self.userDefaults.string(forKey: KeysForUserDefaults.TypeOfSort) == nil {
+                sortStringArray = stringArray.sorted(by: <)
+            } else {
+                sortStringArray = stringArray.sorted(by: >)
+            }
+
+            for (_, stringUrl) in sortStringArray.enumerated() {
+                let fileUrl = URL(string: stringUrl) ?? URL(string: "file:///Users/")!
+                newArray.append(fileUrl)
+            }
+        } else {
+            newArray = array
+        }
+        return newArray
     }
 }
 
@@ -71,8 +115,9 @@ extension ViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let sortArray = self.sortArray(array: self.filemanagerService.collectionOfFiles)
         let defultCell = tableView.dequeueReusableCell(withIdentifier: "DefaultCellID", for: indexPath)
-        for (index, fileUrl) in self.filemanagerService.collectionOfFiles.enumerated() where indexPath[1] == index {
+        for (index, fileUrl) in sortArray.enumerated() where indexPath[1] == index {
             guard let cell = tableView.dequeueReusableCell(withIdentifier: "tabelViewCellID", for: indexPath) as? TableViewCell else {
                 return defultCell
             }
