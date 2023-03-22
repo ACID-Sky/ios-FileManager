@@ -143,7 +143,7 @@ class InfoViewController: UIViewController {
 
     @objc private func buttonPresed() {
         let vc = LoginViewController()
-        vc.changePass = true
+        vc.changePass()
         let viewController = UINavigationController(rootViewController: vc)
         present(viewController, animated: true)
     }

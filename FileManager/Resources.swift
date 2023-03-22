@@ -29,7 +29,7 @@ enum TypeForSortFile {
     static let fromZToA = "Сортировка от Я до А"
 }
 
-enum AlertsMessage {
+enum AlertsMessage: Error {
     case fewCharacters
     case wrongOriginPass
     case wrongNewPass

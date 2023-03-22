@@ -10,8 +10,7 @@ import Locksmith
 
 class LoginViewController: UIViewController {
 
-    private lazy var password = ""
-    lazy var changePass: Bool = false
+    private lazy var checkerPass = CheckerPassword()
 
     private lazy var scrollView = UIScrollView()
     private lazy var logoView = UIImageView()
@@ -39,9 +38,6 @@ class LoginViewController: UIViewController {
 //        userDefaults.removeObject(forKey: KeysForUserDefaults.TypeOfSort)
 //        userDefaults.removeObject(forKey: KeysForUserDefaults.sortIsOn)
 //        print("Удалили")
-//        openView()
-        self.loadPass()
-        print("🔐", password)
     }
 
     override func viewDidLayoutSubviews() {
@@ -123,10 +119,11 @@ class LoginViewController: UIViewController {
     }
 
     private func setupLoginButton() {
-        self.loginButton.setTitle("Login in", for: .normal)
+        self.loginButton.setTitle(self.checkerPass.buttonTitle, for: .normal)
         self.loginButton.tintColor = .white
-        self.loginButton.backgroundColor = .systemPurple
+        self.loginButton.backgroundColor = .systemGray
         self.loginButton.translatesAutoresizingMaskIntoConstraints = false
+        self.loginButton.isUserInteractionEnabled = false
         self.loginButton.layer.cornerRadius = 10
         self.loginButton.addTarget(self, action: #selector(buttonTapped), for: .touchUpInside)
 
@@ -154,14 +151,8 @@ class LoginViewController: UIViewController {
         self.view.addGestureRecognizer(tapGesture)
     }
 
-    private func loadPass() {
-        if let dictonary = Locksmith.loadDataForUserAccount(userAccount: Resources.service) {
-            self.loginButton.setTitle(Resources.singIn, for: .normal)
-            password = dictonary[Resources.key] as? String ?? ""
-        } else {
-            self.loginButton.setTitle(Resources.create, for: .normal)
-        }
-
+    func changePass() {
+        checkerPass.changePass = true
     }
 
     override func viewWillAppear(_ animated: Bool) {
@@ -175,36 +166,6 @@ class LoginViewController: UIViewController {
                                                selector: #selector(self.didHideKeyboard(_:)),
                                                name: UIResponder.keyboardWillHideNotification,
                                                object: nil)
-    }
-
-    private func openView() {
-        let navigationBarAppearance = UINavigationBarAppearance()
-        navigationBarAppearance.configureWithOpaqueBackground()
-        navigationBarAppearance.backgroundColor = .secondarySystemBackground
-        UINavigationBar.appearance().scrollEdgeAppearance = navigationBarAppearance
-
-        let tabBarAppearance = UITabBarAppearance()
-        tabBarAppearance.configureWithOpaqueBackground()
-        tabBarAppearance.backgroundColor = .secondarySystemBackground
-        if #available(iOS 15.0, *) {
-            UITabBar.appearance().scrollEdgeAppearance = tabBarAppearance
-        } else {
-            // Fallback on earlier versions
-        }
-
-        let tabBarController = UITabBarController()
-        let infoViewController = UINavigationController(rootViewController: InfoViewController())
-        let viewController = UINavigationController(rootViewController: ViewController())
-
-
-        tabBarController.viewControllers = [
-            viewController,
-            infoViewController
-        ]
-        viewController.tabBarItem = UITabBarItem(title: "Файлы", image: UIImage(systemName: "externaldrive.fill.badge.person.crop"), tag: 0)
-        infoViewController.tabBarItem = UITabBarItem(title: "Информация", image: UIImage(systemName: "info.circle.fill"), tag: 1)
-
-        self.navigationController?.pushViewController(tabBarController, animated: true)
     }
 
     @objc private func didShowKeyboard(_ notification: Notification) {
@@ -234,86 +195,43 @@ class LoginViewController: UIViewController {
     }
 
     @objc private func buttonTapped () {
-        switch self.loginButton.titleLabel?.text {
-        case Resources.singIn:
-            if changePass {
-                guard let password = self.passwordTextField.text, password.count >= 4 else {
-                    self.passwordTextField.text = nil
-                    let alert = Alerts().showAlert(name: AlertsMessage.wrongOriginPass)
-                    self.present(alert, animated: true, completion: nil)
+        let titleButton = self.loginButton.titleLabel?.text ?? self.checkerPass.buttonTitle
+        let password = self.passwordTextField.text
+        self.passwordTextField.text = nil
+            do {
+                let check = try self.checkerPass.buttonTapped(buttonTitle: titleButton, passwordText: password)
+                self.loginButton.setTitle(check.0, for: .normal)
+                guard let openView = check.1 else {
+                    dismiss(animated: true)
                     return
                 }
-                self.password = password
-                self.passwordTextField.text = nil
-                self.loginButton.setTitle(Resources.change, for: .normal)
-            } else {
-                guard self.password == self.passwordTextField.text, self.password.count > 0 else {
-                    self.passwordTextField.text = nil
-                    let alert = Alerts().showAlert(name: AlertsMessage.wrongOriginPass)
-                    self.present(alert, animated: true, completion: nil)
+                guard openView else {
                     return
                 }
-                openView()
-            }
+                let tbc = self.checkerPass.openView()
+                self.navigationController?.pushViewController(tbc, animated: true)
+            } catch let error {
+                guard let alertError = error as? AlertsMessage else {
+                    print(error)
+                    return
+                }
+                switch self.loginButton.titleLabel?.text {
+                case Resources.singIn:
+                    self.loginButton.setTitle(Resources.singIn, for: .normal)
 
-        case Resources.create:
-            guard let password = self.passwordTextField.text, password.count >= 4 else {
-                self.passwordTextField.text = nil
-                let alert = Alerts().showAlert(name: AlertsMessage.fewCharacters)
+                case Resources.create, Resources.repeatPass:
+                    self.loginButton.setTitle(Resources.create, for: .normal)
+
+                case Resources.change:
+                    self.loginButton.setTitle(Resources.singIn, for: .normal)
+
+                default:
+                    print("не удалось распознать название")
+                }
+
+                let alert = Alerts().showAlert(name: alertError)
                 self.present(alert, animated: true, completion: nil)
-                return
-              }
-            self.password = password
-            self.passwordTextField.text = nil
-            self.loginButton.setTitle(Resources.repeatPass, for: .normal)
-
-        case Resources.repeatPass:
-            guard self.password == self.passwordTextField.text else {
-                self.passwordTextField.text = nil
-                self.password = ""
-                self.loginButton.setTitle(Resources.create, for: .normal)
-                let alert = Alerts().showAlert(name: AlertsMessage.wrongNewPass)
-                self.present(alert, animated: true, completion: nil)
-                return
-              }
-
-            do {
-                try Locksmith.saveData(data: [Resources.key:self.password], forUserAccount: Resources.service)
-
-                self.passwordTextField.text = nil
-                self.loginButton.setTitle(Resources.singIn, for: .normal)
-
-                openView()
-
-            }catch let error {
-                print(error)
             }
-
-        case Resources.change:
-            guard self.password == self.passwordTextField.text else {
-                self.passwordTextField.text = nil
-                self.password = ""
-                self.loginButton.setTitle(Resources.singIn, for: .normal)
-                let alert = Alerts().showAlert(name: AlertsMessage.wrongNewPass)
-                self.present(alert, animated: true, completion: nil)
-                return
-              }
-            do {
-                try Locksmith.updateData(data: [Resources.key:self.password], forUserAccount: Resources.service)
-
-                self.passwordTextField.text = nil
-                self.loginButton.setTitle(Resources.singIn, for: .normal)
-                print("🔐", self.password)
-
-                dismiss(animated: true)
-
-            }catch let error {
-                print(error)
-            }
-
-        default:
-            print("не удалось распознать название")
-        }
 
     }
 
@@ -326,15 +244,14 @@ extension LoginViewController: UITextFieldDelegate {
         return true
     }
 
-    func textFieldDidBeginEditing(_ textField: UITextField) {
-
-    }
-
-    func textFieldDidEndEditing(_ textField: UITextField) {
-
-    }
-
     func textFieldDidChangeSelection(_ textField: UITextField) {
+        guard let countOfCharacter = self.passwordTextField.text?.count, countOfCharacter >= 4 else {
+            self.loginButton.backgroundColor = .systemGray
+            self.loginButton.isUserInteractionEnabled = false
+            return
+        }
+        self.loginButton.backgroundColor = .systemPurple
+        self.loginButton.isUserInteractionEnabled = true
 
     }
 
